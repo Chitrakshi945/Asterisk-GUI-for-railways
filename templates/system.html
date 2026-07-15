@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Control - Asterisk GUI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f9fa;
+      padding-top: 30px;
+    }
+    .card {
+      margin-bottom: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      border: none;
+    }
+    h1 {
+      color: #0d6efd;
+      margin-bottom: 30px;
+    }
+    .section-title {
+      border-bottom: 2px solid #0d6efd;
+      padding-bottom: 5px;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary rounded mb-4">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">Asterisk GUI</a>
+        <div>
+          <a class="btn btn-light" href="/">← Back to Home</a>
+        </div>
+      </div>
+    </nav>
+
+    <h1 class="text-center">System Control</h1>
+
+    <!-- Call Logs (CDR) -->
+    <div class="card p-4">
+      <h2 class="section-title"><i class="bi bi-clock-history"></i> Call Logs (CDR)</h2>
+      <button class="btn btn-outline-secondary" onclick="loadCDR()"><i class="bi bi-journal-text"></i> Load Call Logs</button>
+        <button class="btn btn-danger ms-2" onclick="clearCDR()">
+  <i class="bi bi-trash"></i> Clear Call Logs
+</button>
+      <div class="table-responsive mt-3">
+        <table class="table table-hover table-bordered" id="cdrTable">
+          <thead class="table-light">
+            <tr><th>Time</th><th>From</th><th>To</th><th>Duration (s)</th><th>Status</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Reload Asterisk -->
+    <div class="card p-4">
+      <h2 class="section-title"><i class="bi bi-arrow-repeat"></i> Reload Asterisk</h2>
+      <button class="btn btn-danger" onclick="reloadAsterisk()"><i class="bi bi-bootstrap-reboot"></i> Reload Now</button>
+    </div>
+  </div>
+
+  <script>
+    async function loadCDR() {
+      const res = await fetch('/cdr');
+      const logs = await res.json();
+      const tbody = document.querySelector('#cdrTable tbody');
+      tbody.innerHTML = '';
+      logs.forEach(log => {
+        const row = `<tr>
+          <td>${log.calldate}</td>
+          <td>${log.src}</td>
+          <td>${log.dst}</td>
+          <td>${log.duration}</td>
+          <td>${log.disposition}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+    async function clearCDR() {
+  if (!confirm("Are you sure you want to clear all call logs?")) return;
+
+  const res = await fetch('/clear_cdr', { method: 'POST' });
+  const result = await res.json();
+
+  if (result.message) {
+    alert("🗑️ Call logs cleared.");
+    loadCDR();  // Refresh the table
+  } else {
+    alert("❌ Failed to clear logs: " + result.error);
+  }
+}
+
+    async function reloadAsterisk() {
+      await fetch('/asterisk/reload');
+      alert('🔄 Asterisk Reloaded!');
+    }
+  </script>
+</body>
+</html>
