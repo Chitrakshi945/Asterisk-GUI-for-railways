@@ -1,7 +1,0 @@
-db_config.py
-_pycache_/
-*.pyc
-venv/
-.env
-.vscode/
-.idea
